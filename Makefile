@@ -1,4 +1,4 @@
-create_tile:
+create_tiles:
 	bash create_tiles.sh
 
 run_martin:

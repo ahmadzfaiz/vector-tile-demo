@@ -10,72 +10,115 @@ import MVT from 'ol/format/MVT.js';
 import Style from 'ol/style/Style.js';
 import Stroke from 'ol/style/Stroke.js';
 import Fill from 'ol/style/Fill.js';
-import TileDebugSource from 'ol/source/TileDebug.js';
+import TileDebug from 'ol/source/TileDebug.js';
+import { createXYZ } from 'ol/tilegrid';
+import { get as getProjection } from 'ol/proj';
 
+import layersData from "./layers.json";
 
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM fully loaded and parsed. Initializing OpenLayers map (via NPM).');
+const MIN_ZOOM = 0
+const MAX_ZOOM = 20
 
-    // 1. Define the URL template for your MBTiles source from Martin
-    const mbtilesUrlTemplate = 'http://localhost:3000/SG/{z}/{x}/{y}';
-
-    // 2. Create a new VectorTile source for your MBTiles
-    const mbtilesSource = new VectorTileSource({
-        format: new MVT(),
-        url: mbtilesUrlTemplate,
-    });
-
-    // 3. Create a VectorTile layer using the source
-    const mbtilesLayer = new VectorTileLayer({
-        source: mbtilesSource,
-        style: new Style({
-            stroke: new Stroke({
-                color: 'rgba(255, 0, 0, 0.6)',
-                width: 1
-            }),
-            fill: new Fill({
-                color: 'rgba(0, 0, 255, 0.1)'
-            })
-        }),
-        properties: {
-            renderBuffer: 0
+async function getData(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status} for URL: ${url}`);
         }
-    });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error(`Error fetching data from ${url}: ${error.message}`);
+        return null;
+    }
+}
 
-    // 4. Create a TileDebug layer
-    const debugLayer = new TileLayer({
-        source: new TileDebugSource(),
-        extent: [-20037508.34, -20037508.34, 20037508.34, 20037508.34]
-    });
+async function main() {
+    const mapProjection = getProjection('EPSG:3857');
+    const fullExtent = mapProjection.getExtent();
 
-    // 5. Create the map instance
+    // Set Map View
     const map = new Map({
         target: 'map',
-        layers: [
-            new TileLayer({
-                source: new OSM()
-            }),
-            mbtilesLayer,
-            debugLayer
-        ],
         view: new View({
-            center: fromLonLat([101.9758, 4.2105]),
-            zoom: 5
+            center: fromLonLat([115, 3]),
+            zoom: 5,
+            minZoom: MIN_ZOOM,
+            maxZoom: MAX_ZOOM,
+            projection: 'EPSG:3857'
         }),
     });
 
-    // Add a click listener to log feature properties for debugging
-    map.on('click', function(evt) {
-        const coordinate = evt.coordinate;
-        const features = map.getFeaturesAtPixel(evt.pixel);
-
-        if (features && features.length > 0) {
-            console.log("Clicked features at coordinate:", fromLonLat(coordinate, 'EPSG:3857', 'EPSG:4326'));
-            features.forEach((feature, index) => {
-                console.log(`Feature ${index + 1} Properties:`, feature.getProperties());
-            });
-        } else {
-            console.log("No features clicked at coordinate:", fromLonLat(coordinate, 'EPSG:3857', 'EPSG:4326'));
-        }
+    // Set OSM Basemap
+    const osmBasemap = new TileLayer({
+        source: new OSM()
     });
+    map.addLayer(osmBasemap);
+
+    // Set Tile Debug
+    const debugLayer = new TileLayer({
+        source: new TileDebug({
+            projection: map.getView().getProjection(),
+            tileGrid: createXYZ({
+                extent: fullExtent,
+                tileSize: 256,
+                minZoom: MIN_ZOOM,
+                maxZoom: MAX_ZOOM,
+            }),
+        }),
+        zIndex: 999
+    });
+    map.addLayer(debugLayer);
+
+    // Set MBTiles Layers
+    for (let i = 0; i < layersData.length; i++) {
+        const layerConfig = layersData[i];
+        const tileName = layerConfig.id ?? "";
+        const tileFillColor = layerConfig.fillColor ?? "yellow";
+        const tileStrokeColor = layerConfig.strokeColor ?? "red";
+
+        if (!tileName) {
+            console.warn("Skipping layer with empty ID:", layerConfig);
+            continue;
+        }
+
+        const tileInfo = await getData(`http://localhost:3000/${tileName}`);
+
+        if (!tileInfo || !tileInfo.tiles || tileInfo.tiles.length === 0) {
+            console.error(`Could not get tile URL for layer: ${tileName}. Skipping.`);
+            continue;
+        }
+
+        const tileUrl = tileInfo.tiles[0];
+
+        const mbtilesSource = new VectorTileSource({
+            format: new MVT(),
+            url: tileUrl,
+            minZoom: MIN_ZOOM,
+            maxZoom: MAX_ZOOM,
+            tileGrid: createXYZ({
+                extent: fullExtent,
+                tileSize: 256,
+            }),
+        });
+
+        const mbtilesLayer = new VectorTileLayer({
+            source: mbtilesSource,
+            style: new Style({
+                stroke: new Stroke({
+                    color: tileStrokeColor,
+                    width: 1
+                }),
+                fill: new Fill({
+                    color: tileFillColor
+                })
+            }),
+            renderMode: 'vector',
+        });
+        map.addLayer(mbtilesLayer);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    main();
 });

@@ -2,3 +2,4 @@ mbtiles:
   sources:
     MY: tiles/MY.mbtiles
     SG: tiles/SG.mbtiles
+    ID: tiles/ID.mbtiles

@@ -1,0 +1,14 @@
+[
+    {
+        "id": "ID",
+        "fillColor": "pink"
+    },
+    {
+        "id": "SG",
+        "fillColor": "blue",
+        "strokeColor": "white"
+    },
+    {
+        "id": "MY"
+    }
+]
