@@ -1,0 +1,4 @@
+mbtiles:
+  sources:
+    MY: tiles/MY.mbtiles
+    SG: tiles/SG.mbtiles
