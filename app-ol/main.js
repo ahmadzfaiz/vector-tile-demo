@@ -16,7 +16,7 @@ import { get as getProjection } from 'ol/proj';
 
 import layersData from "./layers.json";
 
-const MIN_ZOOM = 0
+const MIN_ZOOM = 3
 const MAX_ZOOM = 20
 
 async function getData(url) {
@@ -51,7 +51,8 @@ async function main() {
 
     // Set OSM Basemap
     const osmBasemap = new TileLayer({
-        source: new OSM()
+        source: new OSM(),
+        visible: layersData.osm.visible ?? true
     });
     map.addLayer(osmBasemap);
 
@@ -66,13 +67,15 @@ async function main() {
                 maxZoom: MAX_ZOOM,
             }),
         }),
+        visible: layersData.debug.visible ?? true,
         zIndex: 999
     });
     map.addLayer(debugLayer);
 
     // Set MBTiles Layers
-    for (let i = 0; i < layersData.length; i++) {
-        const layerConfig = layersData[i];
+    const tileLayersData = layersData.tiles
+    for (let i = 0; i < tileLayersData.length; i++) {
+        const layerConfig = tileLayersData[i];
         const tileName = layerConfig.id ?? "";
         const tileFillColor = layerConfig.fillColor ?? "yellow";
         const tileStrokeColor = layerConfig.strokeColor ?? "red";

@@ -1,6 +1,9 @@
 create_tiles:
 	bash create_tiles.sh
 
+create_multitiles:
+	bash create_multitiles.sh
+
 run_martin:
 	martin --config config.yaml
 

@@ -1,14 +1,23 @@
-[
-    {
-        "id": "ID",
-        "fillColor": "pink"
+{
+    "osm": {
+        "visible": true
     },
-    {
-        "id": "SG",
-        "fillColor": "blue",
-        "strokeColor": "white"
+    "debug": {
+        "visible": true
     },
-    {
-        "id": "MY"
-    }
-]
+    "tiles": [
+        {
+            "id": "ID",
+            "fillColor": "pink"
+        },
+        {
+            "id": "SG",
+            "fillColor": "blue",
+            "strokeColor": "white"
+        },
+        {
+            "id": "MY"
+        }
+    ]
+}
+
