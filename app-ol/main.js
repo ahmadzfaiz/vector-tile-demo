@@ -79,6 +79,8 @@ async function main() {
         const tileName = layerConfig.id ?? "";
         const tileFillColor = layerConfig.fillColor ?? "yellow";
         const tileStrokeColor = layerConfig.strokeColor ?? "red";
+        const tileMaxZoom = layerConfig.maxZoom ?? MAX_ZOOM;
+        const tileMinZoom = layerConfig.minZoom ?? MIN_ZOOM;
 
         if (!tileName) {
             console.warn("Skipping layer with empty ID:", layerConfig);
@@ -97,8 +99,8 @@ async function main() {
         const mbtilesSource = new VectorTileSource({
             format: new MVT(),
             url: tileUrl,
-            minZoom: MIN_ZOOM,
-            maxZoom: MAX_ZOOM,
+            minZoom: tileMinZoom,
+            maxZoom: tileMaxZoom,
             tileGrid: createXYZ({
                 extent: fullExtent,
                 tileSize: 256,
@@ -147,7 +149,6 @@ async function main() {
                 fill: new Fill({ color: tileConfig.fillColor })
             }),
             renderMode: 'vector',
-            zIndex: 1000 + i,
         });
         map.addLayer(dirTilesLayer);
     }
