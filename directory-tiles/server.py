@@ -16,16 +16,34 @@ def serve_vector_tile(country_code: str, z: int, x: int, y: int):
     including a country code subfolder.
     The URL formats are /tiles/{country_code}/{z}/{x}/{y}.pbf and .mvt.
     """
-    tile_path = os.path.join(TILE_DIR, country_code, str(z), str(x), f'{y}.pbf')
+    # Determine the file extension from the request URL
+    from flask import request
+    requested_extension = request.path.split('.')[-1]
+    
+    # Try both extensions to find the actual file
+    tile_path_requested = os.path.join(TILE_DIR, country_code, str(z), str(x), f'{y}.{requested_extension}')
+    tile_path_pbf = os.path.join(TILE_DIR, country_code, str(z), str(x), f'{y}.pbf')
+    tile_path_mvt = os.path.join(TILE_DIR, country_code, str(z), str(x), f'{y}.mvt')
+    
+    # Check which file exists
+    if os.path.exists(tile_path_requested):
+        tile_path = tile_path_requested
+    elif os.path.exists(tile_path_pbf):
+        tile_path = tile_path_pbf
+    elif os.path.exists(tile_path_mvt):
+        tile_path = tile_path_mvt
+    else:
+        tile_path = None
 
     print(f"Requesting tile: Country={country_code}, Z={z}, X={x}, Y={y}")
-    print(f"Looking for tile at: {tile_path}")
-
-    # Check if the tile file exists
-    if not os.path.exists(tile_path):
+    
+    # Check if any tile file exists
+    if tile_path is None:
         # Log missing tiles less verbosely (only log the coordinate, not full path)
         print(f"Tile not found: {country_code}/{z}/{x}/{y}")
         abort(404)
+    
+    print(f"Found tile at: {tile_path}")
 
     try:
         # Check if the tile is gzipped by reading the first few bytes

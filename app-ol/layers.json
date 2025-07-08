@@ -17,7 +17,30 @@
         }
     ],
     "directoryTiles": [
-        "http://localhost:8002/tiles/SG/{z}/{x}/{y}.pbf"
+        {
+            "id": "SG",
+            "fillColor": "yellow",
+            "strokeColor": "red",
+            "minZoom": 1,
+            "maxZoom": 12,
+            "extension": "pbf"
+        },
+        {
+            "id": "TL",
+            "fillColor": "green",
+            "strokeColor": "green",
+            "minZoom": 0,
+            "maxZoom": 13,
+            "extension": "mvt"
+        },
+        {
+            "id": "AR",
+            "fillColor": "green",
+            "strokeColor": "green",
+            "minZoom": 0,
+            "maxZoom": 13,
+            "extension": "mvt"
+        }
     ]
 }
 

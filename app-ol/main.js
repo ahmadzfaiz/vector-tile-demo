@@ -121,25 +121,36 @@ async function main() {
         map.addLayer(mbtilesLayer);
     }
 
-    const dirTilesLayer = new VectorTileLayer({
-        source: new VectorTileSource({
-            format: new MVT(),
-            tileUrlFunction: ([z, x, y]) => `http://localhost:8002/tiles/SG/${z}/${x}/${y}.pbf`,
-            minZoom: 1,
-            maxZoom: 12,
-            tileGrid: createXYZ({
-                extent: fullExtent,
-                tileSize: 256,
+    const dirTilesConfigs = layersData.directoryTiles
+    for (let i = 0; i < dirTilesConfigs.length; i++) {
+        const tileConfig = dirTilesConfigs[i];
+        const countryCode = tileConfig.id;
+
+        if (!countryCode) {
+            console.warn("Skipping directory tile with empty ID:", tileConfig);
+            continue;
+        }
+
+        const dirTilesLayer = new VectorTileLayer({
+            source: new VectorTileSource({
+                format: new MVT(),
+                tileUrlFunction: ([z, x, y]) => `http://localhost:8002/tiles/${countryCode}/${z}/${x}/${y}.${tileConfig.extension}`,
+                minZoom: tileConfig.minZoom,
+                maxZoom: tileConfig.maxZoom,
+                tileGrid: createXYZ({
+                    extent: fullExtent,
+                    tileSize: 256,
+                }),
             }),
-        }),
-        style: new Style({
-            stroke: new Stroke({ color: 'red', width: 2 }),
-            fill: new Fill({ color: 'rgba(255,0,0,0.3)' })
-        }),
-        renderMode: 'vector',
-        zIndex: 1000,
-    });
-    map.addLayer(dirTilesLayer);
+            style: new Style({
+                stroke: new Stroke({ color: tileConfig.strokeColor, width: 2 }),
+                fill: new Fill({ color: tileConfig.fillColor })
+            }),
+            renderMode: 'vector',
+            zIndex: 1000 + i,
+        });
+        map.addLayer(dirTilesLayer);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
