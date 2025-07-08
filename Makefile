@@ -5,7 +5,10 @@ create_multitiles:
 	bash create_multitiles.sh
 
 run_martin:
-	martin --config config.yaml
+	cd martin-tiles; martin --config config.yaml
+
+run_flask:
+	cd directory-tiles; . venv/bin/activate; python server.py
 
 run_ol:
 	cd app-ol; npm run dev

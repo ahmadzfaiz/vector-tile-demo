@@ -85,7 +85,7 @@ async function main() {
             continue;
         }
 
-        const tileInfo = await getData(`http://localhost:3000/${tileName}`);
+        const tileInfo = await getData(`http://localhost:8001/${tileName}`);
 
         if (!tileInfo || !tileInfo.tiles || tileInfo.tiles.length === 0) {
             console.error(`Could not get tile URL for layer: ${tileName}. Skipping.`);
