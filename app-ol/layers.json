@@ -11,13 +11,13 @@
             "fillColor": "pink"
         },
         {
-            "id": "SG",
+            "id": "MY",
             "fillColor": "blue",
             "strokeColor": "white"
-        },
-        {
-            "id": "MY"
         }
+    ],
+    "directoryTiles": [
+        "http://localhost:8002/tiles/SG/{z}/{x}/{y}.pbf"
     ]
 }
 

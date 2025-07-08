@@ -1,35 +1,54 @@
 import io
 import os
 from flask import Flask, send_file, abort
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 TILE_DIR = os.path.join(os.getcwd(), 'tiles')
 
-@app.route('/tiles/<int:z>/<int:x>/<int:y>.pbf')
-@app.route('/tiles/<int:z>/<int:x>/<int:y>.mvt')
-def serve_vector_tile(z: int, x: int, y: int):
+@app.route('/tiles/<string:country_code>/<int:z>/<int:x>/<int:y>.pbf')
+@app.route('/tiles/<string:country_code>/<int:z>/<int:x>/<int:y>.mvt')
+def serve_vector_tile(country_code: str, z: int, x: int, y: int):
     """
-    Flask route to serve pre-generated vector tiles from a directory.
-    The URL formats are /tiles/{z}/{x}/{y}.pbf and /tiles/{z}/{x}/{y}.mvt,
-    both standard for slippy maps.
+    Flask route to serve pre-generated vector tiles from a directory,
+    including a country code subfolder.
+    The URL formats are /tiles/{country_code}/{z}/{x}/{y}.pbf and .mvt.
     """
-    tile_path = os.path.join(TILE_DIR, str(z), str(x), f'{y}.pbf')
+    tile_path = os.path.join(TILE_DIR, country_code, str(z), str(x), f'{y}.pbf')
 
-    print(f"Requesting tile: Z={z}, X={x}, Y={y}")
+    print(f"Requesting tile: Country={country_code}, Z={z}, X={x}, Y={y}")
     print(f"Looking for tile at: {tile_path}")
 
     # Check if the tile file exists
     if not os.path.exists(tile_path):
-        print(f"Tile not found: {tile_path}")
+        # Log missing tiles less verbosely (only log the coordinate, not full path)
+        print(f"Tile not found: {country_code}/{z}/{x}/{y}")
         abort(404)
 
     try:
-        return send_file(
-            tile_path,
-            mimetype='application/x-protobuf',
-            as_attachment=False
-        )
+        # Check if the tile is gzipped by reading the first few bytes
+        with open(tile_path, 'rb') as f:
+            first_bytes = f.read(2)
+            is_gzipped = first_bytes == b'\x1f\x8b'
+        
+        if is_gzipped:
+            # If gzipped, set proper content encoding
+            response = send_file(
+                tile_path,
+                mimetype='application/x-protobuf',
+                as_attachment=False
+            )
+            response.headers['Content-Encoding'] = 'gzip'
+            return response
+        else:
+            # If not gzipped, serve normally
+            return send_file(
+                tile_path,
+                mimetype='application/x-protobuf',
+                as_attachment=False
+            )
     except Exception as e:
         print(f"Error serving tile {tile_path}: {e}")
         abort(500)

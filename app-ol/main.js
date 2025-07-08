@@ -41,8 +41,8 @@ async function main() {
     const map = new Map({
         target: 'map',
         view: new View({
-            center: fromLonLat([115, 3]),
-            zoom: 5,
+            center: fromLonLat([103.8198, 1.3521]),
+            zoom: 10,
             minZoom: MIN_ZOOM,
             maxZoom: MAX_ZOOM,
             projection: 'EPSG:3857'
@@ -120,6 +120,26 @@ async function main() {
         });
         map.addLayer(mbtilesLayer);
     }
+
+    const dirTilesLayer = new VectorTileLayer({
+        source: new VectorTileSource({
+            format: new MVT(),
+            tileUrlFunction: ([z, x, y]) => `http://localhost:8002/tiles/SG/${z}/${x}/${y}.pbf`,
+            minZoom: 1,
+            maxZoom: 12,
+            tileGrid: createXYZ({
+                extent: fullExtent,
+                tileSize: 256,
+            }),
+        }),
+        style: new Style({
+            stroke: new Stroke({ color: 'red', width: 2 }),
+            fill: new Fill({ color: 'rgba(255,0,0,0.3)' })
+        }),
+        renderMode: 'vector',
+        zIndex: 1000,
+    });
+    map.addLayer(dirTilesLayer);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
